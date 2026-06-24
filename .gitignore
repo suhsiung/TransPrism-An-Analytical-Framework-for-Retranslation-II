@@ -1,0 +1,51 @@
+# Sessions (runtime data)
+sessions/
+
+# Previous output data
+02-outData/
+output/
+
+# Raw corpus (not needed for deployment)
+01-Corpus/00-RAW-backup/
+01-Corpus/01-RAW/
+01-Corpus/02-TAG/
+01-Corpus/04-dictionary/
+
+# Old standalone scripts
+Prog02_indicators_multi-v3_1150509.py
+prog03-analysis3_1150510.py
+prog04-LLMwriteReport_v1_1150510.py
+
+# Generated reports
+Final_Report-*.docx
+LLM_Analysis-*.docx
+LLM_Analysis-*.txt
+
+# Pics / design assets
+00pic/
+
+# Spec workflow
+.spec-workflow/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+*.bmp
+*.png
+shot.*
+
+# Claude Code 本地設定
+.claude/
+
+# 殘留 log
+sessionsapp_log.txt
