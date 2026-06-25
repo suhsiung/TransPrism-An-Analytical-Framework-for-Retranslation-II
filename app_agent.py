@@ -943,7 +943,9 @@ def run_statistical_analysis(csv_path: Path, output_dir: Path):
         for i, col in enumerate(sig_cols):
             ax = axes[i]
             pd_data = [df.loc[df[GROUP_COL]==g, col].dropna().values for g in groups]
-            ax.boxplot(pd_data, labels=groups)
+            ax.boxplot(pd_data)
+            ax.set_xticks(range(1, len(groups) + 1))
+            ax.set_xticklabels(list(groups))
             pv = diff_df.loc[diff_df['指標']==col, 'p值'].values
             pv_str = f"p={pv[0]:.4f}" if len(pv)>0 else ""
             ax.set_title(f"{col}\n({pv_str})", fontsize=8)
@@ -1743,7 +1745,20 @@ _CUSTOM_CSS = """
 }
 .app-header .subtitle {
     font-size: 1.1rem !important;
-    line-height: 1.7 !important;
+    line-height: 1.5 !important;
+    margin: 0 0 .25rem !important;
+    background: linear-gradient(130deg, #38bdf8 0%, #818cf8 55%, #c084fc 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent !important;
+}
+/* 第三排：字型比第二排大、比主標題小 */
+.app-header .subtitle-3 {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
     background: linear-gradient(130deg, #38bdf8 0%, #818cf8 55%, #c084fc 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
@@ -1837,6 +1852,8 @@ _CUSTOM_CSS = """
     background: rgba(14,165,233,.07) !important;
 }
 .tabitem { padding: 1.5rem 1.25rem !important; }
+/* #7 語言指標分析等結果大標題置中 */
+.result-md h1, .result-md h2, .result-md h3 { text-align: center !important; }
 /* 巢狀子分頁（統計比較分析內）維持原字級 */
 .tabitem .tabs > .tab-nav > button { font-size: 0.80rem !important; }
 
@@ -1855,6 +1872,15 @@ _CUSTOM_CSS = """
 .main-chat .bubble-wrap,
 .main-chat div[role="log"] {
     background: #0f172a !important;
+}
+/* #2 消除重複滾軸：只讓 bubble-wrap 捲動，外層不捲 */
+.main-chat [class*="wrapper"],
+.main-chat > div > div:not([role="log"]) {
+    overflow: hidden !important;
+}
+.main-chat div[role="log"].bubble-wrap {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 }
 
 /* 訊息從頂部開始排列，消除空白 */
@@ -2381,6 +2407,20 @@ def create_app():
         var root = document.querySelector('.main-chat');
         if (root) mo.observe(root, { childList: true, subtree: true, attributes: true });
     }, 500);
+
+    /* metadata 表單：出現時自動捲入視野；消失時捲回頂部 */
+    var metaWasVisible = false;
+    function watchMetadata() {
+        var zone = document.getElementById('metadata_zone');
+        var visible = !!(zone && zone.offsetParent !== null);
+        if (visible && !metaWasVisible) {
+            zone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (!visible && metaWasVisible) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        metaWasVisible = visible;
+    }
+    setInterval(watchMetadata, 400);
 }""",
     ) as demo:
 
@@ -2388,11 +2428,8 @@ def create_app():
         gr.HTML(
             '<div class="app-header">'
             '  <h1>譯彩紛呈：重譯文本分析系統</h1>'
-            '  <p class="subtitle">'
-            '    TransPrism: An Analytical Framework for Retranslation II'
-            '    &nbsp;&nbsp;｜&nbsp;&nbsp;'
-            '    分析引擎 Spectra Engine'
-            '  </p>'
+            '  <p class="subtitle">TransPrism: An Analytical Framework for Retranslation</p>'
+            '  <p class="subtitle-3">II 語料淬煉 CorpusRefinery</p>'
             '  <div class="steps">'
             '    <span class="step-pill"><span class="step-num">1</span>情境選擇</span>'
             '    <span class="step-pill"><span class="step-num">2</span>上傳引導</span>'
@@ -2451,7 +2488,7 @@ def create_app():
                         upload_btn = gr.Button("確認上傳", scale=2, variant="primary")
 
                 # ── 語料 Metadata 說明表單（上傳後、分析前）──────────────────
-                with gr.Column(visible=False, elem_classes=["metadata-zone"]) as metadata_row:
+                with gr.Column(visible=False, elem_id="metadata_zone", elem_classes=["metadata-zone"]) as metadata_row:
                     gr.Markdown("### 📑 語料 Metadata 說明\n請於正式分析前說明語料來源、範圍與比較結構，將寫入研究報告。")
 
                     gr.Markdown("**一、原文資訊**")
@@ -2503,7 +2540,7 @@ def create_app():
             # 結果分頁：初始隱藏，分析完成後顯示
             # ══════════════════════════════════════════════════════════════
             with gr.Tab("📊 語言指標分析", visible=False) as tab2:
-                tab_idx_md   = gr.Markdown(_EMPTY_HINT)
+                tab_idx_md   = gr.Markdown(_EMPTY_HINT, elem_classes=["result-md"])
                 tab_idx_df   = gr.Dataframe(
                     label="指標計算結果",
                     interactive=False, visible=False,
@@ -2555,7 +2592,7 @@ def create_app():
                             interactive=False, visible=False,
                         )
                     # 子分頁 5：其他
-                    with gr.Tab("5. 其他"):
+                    with gr.Tab("5. 下載"):
                         tab_stats_file = gr.File(
                             label="下載統計檔案",
                             file_count="multiple", interactive=False, visible=False,
