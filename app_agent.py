@@ -1293,8 +1293,14 @@ def run_report_writing(scenario_key: str, user_metadata: str, user_focus: str,
     style = doc.styles['Normal']
     style.font.name = '微軟正黑體'
     style.font.size = Pt(11)
-    heading = doc.add_heading('LLM 深度重譯研究報告', level=0)
+    heading = doc.add_heading('LLM 輔助重譯研究報告', level=0)
     heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # 標題後標註使用的 LLM 模型（藍色）
+    model_p = doc.add_paragraph()
+    model_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    mr = model_p.add_run(f'本報告由主 Agent（LLM1）模型 {LLM1_MODEL} 生成')
+    mr.font.size = Pt(10)
+    mr.font.color.rgb = RGBColor(0x0E, 0x73, 0xB8)
     doc.add_paragraph(f'研究情境：{scenario_info["title"]}',
                       style='Normal').alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph(f'報告時間：{now_tw().strftime("%Y-%m-%d %H:%M:%S")}（台灣時間）',
@@ -1309,21 +1315,14 @@ def run_report_writing(scenario_key: str, user_metadata: str, user_focus: str,
         elif stripped.startswith('- '):     doc.add_paragraph(stripped[2:], style='List Bullet')
         elif stripped.startswith('* '):     doc.add_paragraph(stripped[2:], style='List Bullet')
         elif stripped:                      doc.add_paragraph(stripped)
-    # 報告底部：標註使用的 LLM 模型
-    doc.add_paragraph('')
-    foot = doc.add_paragraph(f'本報告由主 Agent（LLM1）模型 {LLM1_MODEL} 生成。')
-    foot.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    for r in foot.runs:
-        r.font.size = Pt(9)
     doc.save(str(docx_path))
 
-    # 存 txt
+    # 存 txt（模型標註置於標題下方）
     with open(str(txt_path), 'w', encoding='utf-8') as f:
         f.write(f"研究情境：{scenario_info['title']}\n")
         f.write(f"時間：{now_tw().strftime('%Y-%m-%d %H:%M:%S')}（台灣時間）\n")
         f.write("=" * 60 + "\n\n")
         f.write(result_text)
-        f.write(f"\n\n{'=' * 60}\n本報告由主 Agent（LLM1）模型 {LLM1_MODEL} 生成。\n")
 
     return {
         "docx_path":     docx_path,
@@ -2754,9 +2753,11 @@ def create_app():
                 try:
                     with open(str(txt_files[0]), 'r', encoding='utf-8') as f:
                         rpt_text = f.read()
-                    R[17] = f"### LLM 深度研究報告\n\n{rpt_text}"
+                    model_note = (f"<span style='color:#0ea5e9;font-weight:600'>"
+                                  f"本報告由主 Agent（LLM1）模型 {LLM1_MODEL} 生成</span>")
+                    R[17] = f"### LLM 輔助研究報告　{model_note}\n\n{rpt_text}"
                 except Exception:
-                    R[17] = "### LLM 深度研究報告\n\n（讀取報告時發生錯誤）"
+                    R[17] = "### LLM 輔助研究報告\n\n（讀取報告時發生錯誤）"
 
             dl_rpt = []
             if final_rpts:
