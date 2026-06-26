@@ -25,7 +25,13 @@ if sys.platform.startswith("win"):
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+# 台灣時區（UTC+8）：確保雲端（UTC 伺服器）與本地時間一致
+TW_TZ = timezone(timedelta(hours=8))
+def now_tw():
+    """回傳台灣時間（UTC+8），不受伺服器時區影響。"""
+    return datetime.now(TW_TZ)
 from collections import Counter
 
 import numpy as np
@@ -793,7 +799,7 @@ def run_indicator_calculation(file_paths: list, output_dir: Path, resources: dic
             print(f"  計算 {fp} 時發生錯誤：{e}")
             traceback.print_exc()
 
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    timestamp = now_tw().strftime("%Y%m%d%H%M%S")
     xlsx_path = output_dir / f"textIndex_calculated_1_{timestamp}.xlsx"
     csv_path  = output_dir / "textIndex_calculated.csv"
     result_df.to_excel(str(xlsx_path), index=False)
@@ -1063,7 +1069,7 @@ def run_statistical_analysis(csv_path: Path, output_dir: Path):
     df[result_cols].to_csv(str(cluster_csv_path), index=False, encoding='utf-8-sig')
 
     # ── 6. 產出 docx 技術報告 ──────────────────────────────────────────────────
-    timestamp   = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp   = now_tw().strftime("%Y%m%d_%H%M%S")
     report_path = output_dir / f"Final_Report-{timestamp}.docx"
     doc = Document()
     style = doc.styles['Normal']
@@ -1072,7 +1078,7 @@ def run_statistical_analysis(csv_path: Path, output_dir: Path):
 
     title = doc.add_heading('重譯分析技術報告', level=0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    doc.add_paragraph(f'報告產出時間：{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
+    doc.add_paragraph(f'報告產出時間：{now_tw().strftime("%Y-%m-%d %H:%M:%S")}（台灣時間）',
                       style='Normal').alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph(f'分析文本數：{df.shape[0]} 筆',
                       style='Normal').alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -1278,7 +1284,7 @@ def run_report_writing(scenario_key: str, user_metadata: str, user_focus: str,
 
     result_text = call_main_agent(system_prompt, user_prompt)
 
-    timestamp    = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp    = now_tw().strftime("%Y%m%d_%H%M%S")
     docx_path    = output_dir / f"LLM_Analysis-{timestamp}.docx"
     txt_path     = output_dir / f"LLM_Analysis-{timestamp}.txt"
 
@@ -1291,7 +1297,7 @@ def run_report_writing(scenario_key: str, user_metadata: str, user_focus: str,
     heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph(f'研究情境：{scenario_info["title"]}',
                       style='Normal').alignment = WD_ALIGN_PARAGRAPH.CENTER
-    doc.add_paragraph(f'報告時間：{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
+    doc.add_paragraph(f'報告時間：{now_tw().strftime("%Y-%m-%d %H:%M:%S")}（台灣時間）',
                       style='Normal').alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_page_break()
     for line in result_text.split('\n'):
@@ -1308,7 +1314,7 @@ def run_report_writing(scenario_key: str, user_metadata: str, user_focus: str,
     # 存 txt
     with open(str(txt_path), 'w', encoding='utf-8') as f:
         f.write(f"研究情境：{scenario_info['title']}\n")
-        f.write(f"時間：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"時間：{now_tw().strftime('%Y-%m-%d %H:%M:%S')}（台灣時間）\n")
         f.write("=" * 60 + "\n\n")
         f.write(result_text)
 
