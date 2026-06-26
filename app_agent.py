@@ -1309,6 +1309,12 @@ def run_report_writing(scenario_key: str, user_metadata: str, user_focus: str,
         elif stripped.startswith('- '):     doc.add_paragraph(stripped[2:], style='List Bullet')
         elif stripped.startswith('* '):     doc.add_paragraph(stripped[2:], style='List Bullet')
         elif stripped:                      doc.add_paragraph(stripped)
+    # 報告底部：標註使用的 LLM 模型
+    doc.add_paragraph('')
+    foot = doc.add_paragraph(f'本報告由主 Agent（LLM1）模型 {LLM1_MODEL} 生成。')
+    foot.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    for r in foot.runs:
+        r.font.size = Pt(9)
     doc.save(str(docx_path))
 
     # 存 txt
@@ -1317,6 +1323,7 @@ def run_report_writing(scenario_key: str, user_metadata: str, user_focus: str,
         f.write(f"時間：{now_tw().strftime('%Y-%m-%d %H:%M:%S')}（台灣時間）\n")
         f.write("=" * 60 + "\n\n")
         f.write(result_text)
+        f.write(f"\n\n{'=' * 60}\n本報告由主 Agent（LLM1）模型 {LLM1_MODEL} 生成。\n")
 
     return {
         "docx_path":     docx_path,
