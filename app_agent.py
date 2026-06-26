@@ -2435,7 +2435,7 @@ def create_app():
             '<div class="app-header">'
             '  <h1>譯彩紛呈：重譯文本分析系統</h1>'
             '  <p class="subtitle">TransPrism: An Analytical Framework for Retranslation</p>'
-            '  <p class="subtitle-3">II 語料淬煉 CorpusRefinery</p>'
+            '  <p class="subtitle-3">II 分析引擎 SpectraEngine</p>'
             '  <div class="steps">'
             '    <span class="step-pill"><span class="step-num">1</span>情境選擇</span>'
             '    <span class="step-pill"><span class="step-num">2</span>上傳引導</span>'
